@@ -1,53 +1,28 @@
-public class Transaction {
-    private Account accountFrom;
-    private Account accountTo;
-    private int amountOfMoney;
+class Transaction {
+    int fromAccount;
+    int toAccount;
+    int amount;
 
-    Transaction(Account accountFrom, Account accountTo, int amountOfMoney){
-        this.accountFrom = accountFrom;
-        this.accountTo = accountTo;
-        this.amountOfMoney = amountOfMoney;
+    public Transaction(int from, int to, int amt) {
+        fromAccount = from;
+        toAccount = to;
+        amount = amt;
     }
 
-    public Account getAccountFrom() {
-        return accountFrom;
+    public int getFromAccount() {
+        return fromAccount;
     }
 
-    public Account getAccountTo() {
-        return accountTo;
+    public int getAmount() {
+        return amount;
     }
 
-    public void setAccountFrom(Account accountFrom) {
-        this.accountFrom = accountFrom;
+    public int getToAccount() {
+        return toAccount;
     }
 
-    public void setAccountTo(Account accountTo) {
-        this.accountTo = accountTo;
-    }
-
-    public int getAmountOfMoney() {
-        return amountOfMoney;
-    }
-
-    public void setAmountOfMoney(int amountOfMoney) {
-        this.amountOfMoney = amountOfMoney;
-    }
-
-    public boolean isTransactionSame (Transaction transaction){
-        if(this.accountFrom.isAccountSame(transaction.getAccountFrom()) && this.accountTo.isAccountSame(transaction.getAccountTo()) && this.amountOfMoney == transaction.getAmountOfMoney()){
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    @Override
     public String toString() {
-        return "account From " + "\n" + accountFrom +
-                 "\n" + " account to " + accountTo +
-                "\n" + " amount Of Money " + amountOfMoney
-                + "\n";
+        return " Transaction: from = " + fromAccount + ", to = " + toAccount + " amount = " + amount;
     }
+
 }

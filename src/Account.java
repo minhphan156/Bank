@@ -15,9 +15,6 @@ public class Account{
         return currentBalance;
     }
 
-    public int getIdNumber() {
-        return idNumber;
-    }
 
     public int getNumberOfTransaction() {
         return numberOfTransaction;
@@ -29,10 +26,6 @@ public class Account{
         accountLock.unlock();
     }
 
-    public void setIdNumber(int idNumber) {
-        this.idNumber = idNumber;
-    }
-
     public void setNumberOfTransaction(int numberOfTransaction) {
         accountLock.lock();
 
@@ -40,16 +33,6 @@ public class Account{
         accountLock.unlock();
 
     }
-
-    public boolean isAccountSame( Account account){
-        if(this.idNumber == account.getIdNumber()){
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
 
     @Override
     public String toString() {

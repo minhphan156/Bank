@@ -1,63 +1,106 @@
-import java.io.*;
-import java.util.concurrent.CountDownLatch;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.concurrent.*;
+
 
 public class Bank {
     private Account[] listOfAccount;
-    private static BlockingQueue blockingQueue;
-    private static final Transaction nullTrans = new Transaction(new Account(-1), new Account(0), 0);
-    private static CountDownLatch latch;
+    private BlockingQueue<Transaction> queue;
+    private final Transaction nullTrans = new Transaction(-1,0,0);
 
-    public Bank(){
+    public Bank() {
         listOfAccount = new Account[20];
-        blockingQueue = new BlockingQueue ();
         for(int i = 0;i < 20;i++) {
-            listOfAccount[i] = new Account(i);
+            listOfAccount[i] = new Account(i); //initialize 20 accounts with beginning balance of $1000
         }
+        queue = new LinkedBlockingQueue();
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws InterruptedException {
         Bank bank = new Bank();
-        String textFile = "";
-        int numberOfThreadInput = Integer.parseInt(args[1]);
 
-        bank.loadFile(args[0],textFile);
-        //add nullTrans
+        ArrayList<Worker> listOfWorker = new ArrayList<>();
+        int numberOfThreadInput = Integer.parseInt(args[1]);
         for(int i = 0; i < numberOfThreadInput; i++)
         {
-            bank.getBlockingQueue().add(bank.nullTrans);
-        }
-
-
-
-        latch = new CountDownLatch(numberOfThreadInput);
-
-        for(int i = 0; i < numberOfThreadInput;i++ ){
-            new Worker().start();
+            listOfWorker.add(bank.new Worker()); //adding workers depend on input
         }
 
         try {
-            latch.await();
-        }
-        catch (InterruptedException ignored){}
+            Iterator<Worker> itr = listOfWorker.iterator();
+            while (itr.hasNext()){
+                itr.next().start(); //start each worker
+            }
 
-        System.out.println("----------- all done -----------");
-        // DEBUG blocking queue
-//        Iterator<Transaction> itr = bank.getBlockingQueue().getElements().iterator();
-//        while (itr.hasNext()){
-//            System.out.println(itr.next().toString());
-//        }
+            bank.loadFile(args[0]); //load queue with transactions from text files
+
+            for(int i = 0; i < numberOfThreadInput; i++)
+            {
+                bank.queue.put(bank.nullTrans); //putting null transactions depend on number of workers
+            }
+
+            Iterator<Worker> itrNew = listOfWorker.iterator();
+            while (itrNew.hasNext()){
+                itrNew.next().join(); // workers wait for each other to exit at the same time
+            }
+
+        } catch (InterruptedException e) {
+            System.out.println("interrupted");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("\n----- All threads done -----");
+        System.out.println("----- Accounts Summary -----");
 
         for(int i = 0 ; i < bank.getListOfAccount().length; i++){
             System.out.println(bank.getListOfAccount()[i].toString());
         }
-
     }
 
-    public void loadFile(String fileName, String textFile) throws IOException {
+    public Account[] getListOfAccount() {
+        return listOfAccount;
+    }
+
+    //method to process transaction
+    public synchronized void processTransaction(Transaction t) {
+        Account accFrom = listOfAccount[t.getFromAccount()];
+        Account accTo = listOfAccount[t.getToAccount()];
+        int money = t.getAmount();
+
+        accFrom.setCurrentBalance(accFrom.getCurrentBalance() - money);
+        accFrom.setNumberOfTransaction(accFrom.getNumberOfTransaction() + 1);
+
+        accTo.setCurrentBalance(accTo.getCurrentBalance() + money);
+        accTo.setNumberOfTransaction(accTo.getNumberOfTransaction() + 1);
+    }
+
+    //Worker class to do work
+    private class Worker extends Thread {
+        public void run() {
+            try {
+                Transaction t;
+                do {
+                    t = queue.take();
+                    if(t.fromAccount != -1) {
+                        processTransaction(t);
+                        System.out.println(this.getName() + " processed" + t);
+                    }
+                } while (t.fromAccount != -1);
+            } catch (InterruptedException e) {
+                System.out.println("interrupted");
+            }
+            System.out.println(this.getName()  + " is exiting...");
+        }
+    }
+
+    //method to load text file of transactions on queue
+    public void loadFile(String fileName) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(fileName));
         try {
-            StringBuilder sb = new StringBuilder();
-
             int accountFrom;
             int accountTo;
             int amountOfMoney;
@@ -67,84 +110,15 @@ public class Bank {
                 accountFrom = Integer.parseInt(strOfNumbers[0]);
                 accountTo = Integer.parseInt(strOfNumbers[1]);
                 amountOfMoney = Integer.parseInt(strOfNumbers[2]);
-                Transaction transaction = new Transaction(listOfAccount[accountFrom], listOfAccount[accountTo], amountOfMoney);
-                blockingQueue.add(transaction);
+                Transaction transaction = new Transaction(accountFrom, accountTo, amountOfMoney);
+                queue.put(transaction);
                 line = br.readLine();
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally {
             br.close();
         }
-
-    }
-
-
-    public BlockingQueue getBlockingQueue() {
-        return blockingQueue;
-    }
-
-    public Account[] getListOfAccount() {
-        return listOfAccount;
-    }
-
-    public void setListOfAccount(Account[] listOfAccount) {
-        this.listOfAccount = listOfAccount;
-    }
-
-
-
-    public static class Worker extends Thread{
-
-        public Worker(){}
-
-        @Override
-        public void run(){
-
-              //  System.out.println("blocking queue size begin thread is " + blockingQueue.getSize());
-
-                Transaction transaction = blockingQueue.remove();
-
-                while (transaction.isTransactionSame(nullTrans) != true) {
-
-//                    if(transaction.getAccountFrom().isAccountSame(transaction.getAccountTo())){
-//
-//                        transaction.getAccountFrom().setCurrentBalance(transaction.getAccountFrom().getCurrentBalance() - transaction.getAmountOfMoney());
-//                        transaction.getAccountTo().setCurrentBalance(transaction.getAccountTo().getCurrentBalance() + transaction.getAmountOfMoney());
-//
-//                        transaction.getAccountFrom().setNumberOfTransaction(transaction.getAccountFrom().getNumberOfTransaction() + 1);
-//                        transaction.getAccountTo().setNumberOfTransaction(transaction.getAccountTo().getNumberOfTransaction() + 1);
-//
-//                        transaction = blockingQueue.remove();
-//
-//                    }
-//                    else {
-
-//                    System.out.println("-----------------------------------");
-//                    Thread running = Thread.currentThread();
-//                    System.out.println(running.getName());
-//                    System.out.println(transaction.toString());
-//                    System.out.println("-----------------------------------");
-
-
-                    transaction.getAccountFrom().setCurrentBalance(transaction.getAccountFrom().getCurrentBalance() - transaction.getAmountOfMoney());
-                        transaction.getAccountTo().setCurrentBalance(transaction.getAccountTo().getCurrentBalance() + transaction.getAmountOfMoney());
-
-                        transaction.getAccountFrom().setNumberOfTransaction(transaction.getAccountFrom().getNumberOfTransaction() + 1);
-                        transaction.getAccountTo().setNumberOfTransaction(transaction.getAccountTo().getNumberOfTransaction() + 1);
-
-                        transaction = blockingQueue.remove();
-//                    }
-                  //  System.out.println("blocking queue size middle thread is " + blockingQueue.getSize());
-
-                }
-
-
-                System.out.println(" I am done for this thread");
-
-          //  System.out.println("blocking queue size end thread is " + blockingQueue.getSize());
-           // System.out.println();
-            latch.countDown();
-
-        }
-
     }
 }
+
