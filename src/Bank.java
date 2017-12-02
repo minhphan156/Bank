@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -110,28 +111,22 @@ public class Bank {
 
     // method to load text file of transactions on queue
     public void loadFile(String fileName) {
-        try{
-            try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
-                int accountFrom;
-                int accountTo;
-                int amountOfMoney;
-                String line = br.readLine();
-                while (line != null) {
-                    String[] strOfNumbers = line.split("\\s");
-                    accountFrom = Integer.parseInt(strOfNumbers[0]);
-                    accountTo = Integer.parseInt(strOfNumbers[1]);
-                    amountOfMoney = Integer.parseInt(strOfNumbers[2]);
-                    Transaction transaction = new Transaction(accountFrom, accountTo, amountOfMoney);
-                    queue.put(transaction);
-                    line = br.readLine();
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            int accountFrom;
+            int accountTo;
+            int amountOfMoney;
+            String line = br.readLine();
+            while (line != null) {
+                String[] strOfNumbers = line.split("\\s");
+                accountFrom = Integer.parseInt(strOfNumbers[0]);
+                accountTo = Integer.parseInt(strOfNumbers[1]);
+                amountOfMoney = Integer.parseInt(strOfNumbers[2]);
+                Transaction transaction = new Transaction(accountFrom, accountTo, amountOfMoney);
+                queue.put(transaction);
+                line = br.readLine();
             }
-        }
-
-        catch (IOException e){
-            System.out.println("IO Exception: "+e);
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
         }
     }
 }
