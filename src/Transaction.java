@@ -1,7 +1,19 @@
+/**
+ * @author Danil Kolesnikov danil.kolesnikov@sjsu.edu
+ * @author Minh Phan minh.phan@sjsu.edu
+ * @author Yulan Jin yulan.jin@sjsu.edu
+ * CS 151 Term Project - Whiteboard
+ */
+
+/**
+ * Transaction class contains a model of a transaction
+ * Fields: From, To, Amount transferred
+ */
+
 class Transaction {
-    int fromAccount;
-    int toAccount;
-    int amount;
+    private int fromAccount;
+    private int toAccount;
+    private  int amount;
 
     public Transaction(int from, int to, int amt) {
         fromAccount = from;
