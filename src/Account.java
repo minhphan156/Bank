@@ -1,7 +1,20 @@
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * @author Danil Kolesnikov danil.kolesnikov@sjsu.edu
+ * @author Minh Phan minh.phan@sjsu.edu
+ * @author Yulan Jin yulan.jin@sjsu.edu
+ * CS 151 Term Project - Whiteboard
+ */
+
+/**
+ * Account class is a model of a bank account
+ * Fields: id of the account; current balance, number of transactions
+ */
+
 public class Account{
+
     private int idNumber;
     private int currentBalance = 1000;
     private int numberOfTransaction = 0;

@@ -6,7 +6,20 @@ import java.util.Iterator;
 import java.util.concurrent.*;
 
 
+/**
+ * @author Danil Kolesnikov danil.kolesnikov@sjsu.edu
+ * @author Minh Phan minh.phan@sjsu.edu
+ * @author Yulan Jin yulan.jin@sjsu.edu
+ * CS 151 Term Project - Whiteboard
+ */
+
+/**
+ * Bank class is responsible for the work flow of the program
+ * Worker class performs thread work
+ */
+
 public class Bank {
+
     private Account[] listOfAccount;
     private BlockingQueue<Transaction> queue;
     private final Transaction nullTrans = new Transaction(-1,0,0);
@@ -19,7 +32,7 @@ public class Bank {
         queue = new LinkedBlockingQueue();
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         Bank bank = new Bank();
 
         ArrayList<Worker> listOfWorker = new ArrayList<>();
@@ -46,11 +59,10 @@ public class Bank {
             while (itrNew.hasNext()){
                 itrNew.next().join(); // workers wait for each other to exit at the same time
             }
+        }
 
-        } catch (InterruptedException e) {
-            System.out.println("interrupted");
-        } catch (IOException e) {
-            e.printStackTrace();
+        catch (InterruptedException e) {
+            System.out.println("Interrupted");
         }
 
         System.out.println("\n----- All threads done -----");
@@ -73,23 +85,22 @@ public class Bank {
 
         accFrom.setCurrentBalance(accFrom.getCurrentBalance() - money);
         accFrom.setNumberOfTransaction(accFrom.getNumberOfTransaction() + 1);
-
         accTo.setCurrentBalance(accTo.getCurrentBalance() + money);
         accTo.setNumberOfTransaction(accTo.getNumberOfTransaction() + 1);
     }
 
-    //Worker class to do work
+    // Worker class to do work
     private class Worker extends Thread {
         public void run() {
             try {
                 Transaction t;
                 do {
                     t = queue.take();
-                    if(t.fromAccount != -1) {
+                    if(t.getFromAccount() != -1) {
                         processTransaction(t);
                         System.out.println(this.getName() + " processed" + t);
                     }
-                } while (t.fromAccount != -1);
+                } while (t.getFromAccount() != -1);
             } catch (InterruptedException e) {
                 System.out.println("interrupted");
             }
@@ -97,27 +108,30 @@ public class Bank {
         }
     }
 
-    //method to load text file of transactions on queue
-    public void loadFile(String fileName) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(fileName));
-        try {
-            int accountFrom;
-            int accountTo;
-            int amountOfMoney;
-            String line = br.readLine();
-            while (line != null) {
-                String[] strOfNumbers = line.split("\\s");
-                accountFrom = Integer.parseInt(strOfNumbers[0]);
-                accountTo = Integer.parseInt(strOfNumbers[1]);
-                amountOfMoney = Integer.parseInt(strOfNumbers[2]);
-                Transaction transaction = new Transaction(accountFrom, accountTo, amountOfMoney);
-                queue.put(transaction);
-                line = br.readLine();
+    // method to load text file of transactions on queue
+    public void loadFile(String fileName) {
+        try{
+            try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+                int accountFrom;
+                int accountTo;
+                int amountOfMoney;
+                String line = br.readLine();
+                while (line != null) {
+                    String[] strOfNumbers = line.split("\\s");
+                    accountFrom = Integer.parseInt(strOfNumbers[0]);
+                    accountTo = Integer.parseInt(strOfNumbers[1]);
+                    amountOfMoney = Integer.parseInt(strOfNumbers[2]);
+                    Transaction transaction = new Transaction(accountFrom, accountTo, amountOfMoney);
+                    queue.put(transaction);
+                    line = br.readLine();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            br.close();
+        }
+
+        catch (IOException e){
+            System.out.println("IO Exception: "+e);
         }
     }
 }
