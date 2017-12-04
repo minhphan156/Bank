@@ -87,13 +87,13 @@ public class Bank {
                     t = queue.take();
                     if(t.fromAccount != -1) {
                         processTransaction(t);
-                        System.out.println(this.getName() + " processed" + t);
+                       // System.out.println(this.getName() + " processed" + t);
                     }
                 } while (t.fromAccount != -1);
             } catch (InterruptedException e) {
                 System.out.println("interrupted");
             }
-            System.out.println(this.getName()  + " is exiting...");
+           // System.out.println(this.getName()  + " is exiting...");
         }
     }
 
